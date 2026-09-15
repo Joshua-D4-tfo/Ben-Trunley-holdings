@@ -1,1 +1,862 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consolidated Asset Statement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<script>
+/* Plotly is loaded from the repository first, then from public mirrors only if
+   that file is missing. The statement renders its figures and tables with or
+   without it, so a blocked or unreachable script cannot take the page down. */
+(function(){
+  var sources=[
+    "vendor/plotly-basic.min.js",
+    "https://cdn.plot.ly/plotly-basic-2.35.2.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.2/plotly-basic.min.js",
+    "https://unpkg.com/plotly.js-basic-dist-min@2.35.2/plotly-basic.min.js"
+  ];
+  var i=0;
+  window.__plotlyResolved=false;
+  window.__plotlyCallbacks=[];
+  function finish(ok){
+    window.__plotlyResolved=true;
+    var cbs=window.__plotlyCallbacks; window.__plotlyCallbacks=[];
+    cbs.forEach(function(f){ try{ f(ok); }catch(e){} });
+  }
+  function next(){
+    if(i>=sources.length){ finish(false); return; }
+    var s=document.createElement("script");
+    s.src=sources[i++];
+    s.onload=function(){ if(window.Plotly) finish(true); else next(); };
+    s.onerror=next;
+    document.head.appendChild(s);
+  }
+  next();
+})();
+</script>
+<style>
+:root{
+  --bg:#EDEFF2; --paper:#FFFFFF; --ink:#16202B; --ink2:#5C6B79; --line:#D6DBE1;
+  --lux:#0E5C55; --noverra:#3C6E9B; --emi:#8C5B3F; --oliver:#A8862C;
+  --pos:#1F7A4D; --neg:#B0381F;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px 56px}
+
+.masthead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;padding:28px 0 18px;border-bottom:1px solid var(--line)}
+.masthead h1{font-family:"Source Serif 4",Georgia,serif;font-weight:600;font-size:26px;line-height:1.15;margin:0;letter-spacing:-0.01em}
+.masthead .client{color:var(--ink2);margin:4px 0 0;font-size:13px}
+.status{display:flex;align-items:center;gap:12px}
+.status .stamp{color:var(--ink2);font-size:12px;text-align:right}
+button.act{font:inherit;font-size:13px;font-weight:500;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:7px 14px;cursor:pointer}
+button.act:hover{border-color:var(--ink2)}
+button.act:focus-visible{outline:2px solid var(--lux);outline-offset:2px}
+button.act[disabled]{opacity:.5;cursor:default}
+
+nav.tabs{display:flex;flex-wrap:wrap;gap:24px;border-bottom:1px solid var(--line);margin-bottom:26px}
+nav.tabs button{font:inherit;font-size:14px;font-weight:500;color:var(--ink2);background:none;border:0;border-bottom:2px solid transparent;padding:14px 0;margin-bottom:-1px;cursor:pointer;display:flex;align-items:center;gap:8px}
+nav.tabs button i{width:8px;height:8px;border-radius:50%;display:inline-block}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:currentColor}
+nav.tabs button:focus-visible{outline:2px solid var(--lux);outline-offset:3px}
+section.tab[hidden]{display:none}
+
+/* structure tree */
+.hero{background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:26px 28px;margin-bottom:18px}
+.heroTop{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.heroTop .k{font-size:13px;color:var(--ink2)}
+.heroTop .v{font-family:"Source Serif 4",Georgia,serif;font-size:44px;font-weight:600;letter-spacing:-0.02em;line-height:1.05}
+.heroTop .note{font-size:12px;color:var(--ink2);max-width:34ch;text-align:right}
+.tree{margin-top:22px}
+.node{display:flex;align-items:baseline;justify-content:space-between;gap:20px;padding:11px 0;border-bottom:1px solid var(--line)}
+.node:last-child{border-bottom:0}
+.node .nm{display:flex;align-items:center;gap:10px;min-width:0}
+.node .nm i{width:9px;height:9px;border-radius:50%;flex:none}
+.node .nm b{font-weight:600}
+.node .nm span{color:var(--ink2);font-size:12.5px}
+.node .amt{font-family:"Source Serif 4",Georgia,serif;font-size:19px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.node .amt em{display:block;font-style:normal;font-family:"IBM Plex Sans",sans-serif;font-size:11.5px;font-weight:400;color:var(--ink2);text-align:right}
+.node.child{padding-left:26px;position:relative}
+.node.child::before{content:"";position:absolute;left:9px;top:0;bottom:0;border-left:1px solid var(--line)}
+.node.grandchild{padding-left:52px}
+.node.grandchild::before{content:"";position:absolute;left:35px;top:0;bottom:0;border-left:1px solid var(--line)}
+.node.tier1{background:linear-gradient(to right,rgba(0,0,0,.02),transparent 60%)}
+
+.compbar{display:flex;height:10px;border-radius:2px;overflow:hidden;background:var(--line);margin-top:22px}
+.compbar span{display:block;height:100%}
+.complegend{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px;font-size:12px;color:var(--ink2)}
+.complegend em{font-style:normal;color:var(--ink);font-weight:500}
+.complegend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-bottom:22px}
+.kpi{background:var(--paper);padding:16px 18px}
+.kpi .k{font-size:12px;color:var(--ink2);margin-bottom:5px}
+.kpi .v{font-family:"Source Serif 4",Georgia,serif;font-size:22px;font-weight:600;letter-spacing:-0.01em}
+.kpi .v.pos{color:var(--pos)}
+.kpi .v.neg{color:var(--neg)}
+.kpi.headline{background:#F4F7F7}
+
+.grid{display:grid;gap:18px;margin-bottom:18px}
+.grid.two{grid-template-columns:repeat(auto-fit,minmax(390px,1fr))}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:18px 20px 12px}
+.panel h2{font-family:"Source Serif 4",Georgia,serif;font-size:16px;font-weight:600;margin:0 0 14px}
+.panel .lede{color:var(--ink2);font-size:12.5px;margin:-8px 0 14px;max-width:70ch}
+.chart{width:100%;height:320px}
+.chart.tall{height:380px}
+
+.registerhead{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
+input.search{font:inherit;font-size:13px;padding:7px 11px;border:1px solid var(--line);border-radius:4px;background:var(--bg);min-width:260px;color:var(--ink)}
+input.search:focus{outline:2px solid var(--lux);outline-offset:1px;background:var(--paper)}
+.tablescroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;font-weight:600;color:var(--ink2);border-bottom:1px solid var(--ink2);user-select:none}
+th.sortable{cursor:pointer}
+th.sortable:hover{color:var(--ink)}
+th.sorted::after{content:"\2191";margin-left:6px;font-size:10px}
+th.sorted.desc::after{content:"\2193"}
+td.num,th.num{text-align:right}
+td.num{font-variant-numeric:tabular-nums}
+tbody tr:hover{background:#F6F8F9}
+.tag{display:inline-block;padding:1px 8px;border-radius:3px;font-size:11.5px;border:1px solid var(--line);background:var(--bg)}
+.holderdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+
+.notice{background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:26px 28px;margin:26px 0}
+.notice h2{font-family:"Source Serif 4",Georgia,serif;font-size:18px;margin:0 0 10px}
+.notice p{margin:0 0 12px;max-width:68ch;color:var(--ink2)}
+.notice ol{margin:0 0 16px;padding-left:20px;max-width:68ch;color:var(--ink2)}
+.notice li{margin-bottom:7px}
+.notice code{background:var(--bg);padding:2px 6px;border-radius:3px;font-size:12.5px;color:var(--ink)}
+.notice.error{border-left:3px solid var(--neg)}
+.setuprow{display:flex;flex-wrap:wrap;gap:10px}
+.setuprow input{flex:1 1 380px;font:inherit;font-size:13px;padding:8px 11px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink)}
+.setuprow input:focus{outline:2px solid var(--lux);outline-offset:1px;background:var(--paper)}
+.empty{padding:34px 0;color:var(--ink2);max-width:60ch}
+.loading{color:var(--ink2);padding:40px 0;text-align:center}
+footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);color:var(--ink2);font-size:12px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
+footer button{font:inherit;font-size:12px;color:var(--ink2);background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
+@media (max-width:640px){
+  .heroTop .v{font-size:34px}
+  .heroTop .note{text-align:left}
+  .node{flex-wrap:wrap;gap:6px}
+  .node.grandchild{padding-left:34px}
+  .node.grandchild::before{left:22px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <h1>Consolidated Asset Statement</h1>
+      <p class="client" id="clientLine"></p>
+    </div>
+    <div class="status">
+      <div class="stamp" id="stamp"></div>
+      <button class="act" id="refreshBtn" type="button">Refresh data</button>
+    </div>
+  </header>
+
+  <div id="app"><div class="loading">Loading.</div></div>
+
+  <div id="content" hidden>
+    <nav class="tabs" role="tablist" id="tabnav"></nav>
+    <div id="panels"></div>
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script>
+/* ===========================================================================
+   1. CONFIGURATION
+   ---------------------------------------------------------------------------
+   csvUrl is the published CSV link for the source sheet. It is built into the
+   file so that the statement loads on any machine without setup. Anyone who
+   can read this file can therefore read the sheet, so the repository holding
+   it should be private.
+   To point a single browser at a different sheet without editing this file,
+   use "Change the source link" in the footer. That override is stored in that
+   browser only and takes precedence over the link below until it is cleared.
+   =========================================================================== */
+const CONFIG = {
+  csvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4XCOB0UPlvpb5JzrmgC4xuluwnPXOH6HlwHjlY0xVvRYkNzy9jvL3TWFhaNDGWhgnp5tgJ5rW4NkP/pub?gid=1446997963&single=true&output=csv",
+  beneficialOwner: "Ben Trunley",
+  statementFor: "Ben Trunley, consolidated position",
+  currency: "AED",
+  autoRefreshMinutes: 10
+};
+
+/* ===========================================================================
+   2. OWNERSHIP STRUCTURE
+   ---------------------------------------------------------------------------
+   Each holder is matched against the Ownership column in the sheet.
+   parent records where the holder sits in the structure. To add a further
+   SPV, add an entry here and the tab, figures and charts follow automatically.
+   =========================================================================== */
+const HOLDERS = [
+  {id:"ben",     match:["ben trunley","trunley"],          label:"Ben Trunley, personal", short:"Personal", role:"Held personally, outside the foundation structure", parent:null,   colour:"#A8862C"},
+  {id:"nexo",    match:["nexo foundation","nexo"],         label:"Nexo Foundation",       short:"Nexo",     role:"Foundation, held directly",  parent:null,   colour:"#0E5C55"},
+  {id:"kurve",   match:["kurve properties","kurve"],       label:"Kurve Properties",      short:"Kurve",    role:"SPV beneath Nexo Foundation", parent:"nexo", colour:"#3C6E9B"},
+  {id:"eight",   match:["8group holdings","8group","8 group"], label:"8Group Holdings",   short:"8Group",   role:"SPV beneath Nexo Foundation", parent:"nexo", colour:"#8C5B3F"},
+  {id:"prodigy", match:["prodigy capital","prodigy"],      label:"Prodigy Capital",       short:"Prodigy",  role:"SPV beneath Nexo Foundation", parent:"nexo", colour:"#6B5B95"},
+  {id:"hotv",    match:["hotv limited","hotv"],            label:"HOTV Limited",          short:"HOTV",     role:"SPV beneath Nexo Foundation", parent:"nexo", colour:"#1F7A4D"}
+];
+const STRUCTURE_ROOT = "nexo";
+
+/* ===========================================================================
+   3. COLUMN MAPPING
+   =========================================================================== */
+const COLS = {
+  development:["development","asset","property"],
+  unit:["unit"],
+  pctPaid:["%paid","percentpaid","paid%"],
+  purchasePrice:["purchaseprice","cost"],
+  currentValue:["currentvalue","value","marketvalue"],
+  unrealised:["unrealisedg/l","unrealizedg/l","unrealisedgl","gainloss","g/l"],
+  paid:["paid"],
+  outstanding:["outstanding","balance"],
+  ownership:["ownership","owner","assetholder"],
+  purpose:["purpose"],
+  location:["location"],
+  type:["type"],
+  rented:["rented"],
+  status:["status"],
+  assetClass:["assetclass","class","category"]
+};
+
+const CLASS_COLOURS = {Property:"#0E5C55", Cash:"#C08A2E", Investments:"#5B6E8C", Other:"#7A8B99"};
+const INK="#16202B", INK2="#5C6B79", LINE="#D6DBE1", POS="#1F7A4D", NEG="#B0381F";
+const WHEEL=["#0E5C55","#A8862C","#3C6E9B","#8C5B3F","#5B6E8C","#1F7A4D","#B0381F","#7A8B99"];
+const PLOT_FONT={family:"IBM Plex Sans, sans-serif", size:12, color:INK2};
+const PLOT_CFG={displayModeBar:false, responsive:true};
+const STORE_KEY="assetStatement.csvUrl";
+
+/* ===========================================================================
+   4. HELPERS
+   =========================================================================== */
+function num(v){
+  if(v===null||v===undefined) return 0;
+  let s=String(v).trim(); if(!s) return 0;
+  const neg=/^\(.*\)$/.test(s);
+  s=s.replace(/[()]/g,"").replace(/[^0-9.\-]/g,"");
+  if(s===""||s==="-"||s===".") return 0;
+  const n=parseFloat(s); if(isNaN(n)) return 0;
+  return neg?-n:n;
+}
+function norm(s){ return String(s||"").toLowerCase().replace(/[\s_.,]/g,""); }
+/* Unit values are written inconsistently across client sheets, as bare numbers
+   in some and prefixed with the word Unit in others. They are normalised here
+   so that labels read the same way whatever the sheet contains. */
+function cleanUnit(v){
+  let u=String(v||"").trim();
+  if(!u) return "";
+  return u.replace(/^(unit|units|apt|apartment|no\.?|#)\s*/i,"").trim();
+}
+function money(n){
+  const sign=n<0?"-":""; const a=Math.abs(n);
+  return sign+CONFIG.currency+" "+a.toLocaleString("en-US",{maximumFractionDigits:0});
+}
+function moneyShort(n){
+  const sign=n<0?"-":""; const a=Math.abs(n);
+  if(a>=1e9) return sign+CONFIG.currency+" "+(a/1e9).toFixed(2)+"B";
+  if(a>=1e6) return sign+CONFIG.currency+" "+(a/1e6).toFixed(2)+"M";
+  if(a>=1e3) return sign+CONFIG.currency+" "+(a/1e3).toFixed(0)+"K";
+  return sign+CONFIG.currency+" "+a.toFixed(0);
+}
+function share(part,whole){ return whole>0 ? (part/whole*100).toFixed(1)+"% of net worth" : ""; }
+function esc(s){ return String(s===undefined||s===null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function holderById(id){ return HOLDERS.find(h=>h.id===id); }
+function holderColour(id){ const h=holderById(id); return h?h.colour:INK2; }
+
+/* ---- CSV ---- */
+function parseCSV(text){
+  const rows=[]; let row=[], field="", quoted=false;
+  text=text.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(quoted){
+      if(c==='"'){ if(text[i+1]==='"'){ field+='"'; i++; } else quoted=false; }
+      else field+=c;
+    }else{
+      if(c==='"') quoted=true;
+      else if(c===","){ row.push(field); field=""; }
+      else if(c==="\n"){ row.push(field); rows.push(row); row=[]; field=""; }
+      else field+=c;
+    }
+  }
+  row.push(field);
+  if(row.length>1||row[0]!=="") rows.push(row);
+  return rows;
+}
+function buildIndex(header){
+  const idx={}, normed=header.map(norm);
+  for(const key in COLS){
+    idx[key]=-1;
+    for(const cand of COLS[key]){
+      const pos=normed.indexOf(norm(cand));
+      if(pos!==-1){ idx[key]=pos; break; }
+    }
+  }
+  return idx;
+}
+function classify(rec){
+  const c=norm(rec.assetClass);
+  if(c.startsWith("cash")||c.startsWith("bank")||c.startsWith("current")||c.startsWith("deposit")) return "Cash";
+  if(c.startsWith("invest")||c.startsWith("securit")||c.startsWith("equit")||c.startsWith("fund")) return "Investments";
+  if(c.startsWith("propert")||c.startsWith("real")||c==="") {
+    const p=norm(rec.purpose);
+    if(p==="cash"||p==="bank") return "Cash";
+    if(p.startsWith("invest")) return "Investments";
+    return "Property";
+  }
+  return "Other";
+}
+function matchHolder(ownership){
+  const o=norm(ownership);
+  if(!o) return null;
+  for(const h of HOLDERS){ if(h.match.some(m=>o===norm(m)||o.includes(norm(m)))) return h.id; }
+  return null;
+}
+function toRecords(rows){
+  if(!rows.length) throw new Error("The published sheet returned no rows.");
+  let hr=0;
+  while(hr<rows.length && rows[hr].every(c=>String(c).trim()==="")) hr++;
+  const header=rows[hr], idx=buildIndex(header);
+  if(idx.development===-1||idx.currentValue===-1)
+    throw new Error("A Development column and a Current Value column could not be found in the published sheet.");
+  const out=[], unmatched=new Set();
+  for(let r=hr+1;r<rows.length;r++){
+    const cells=rows[r];
+    const get=k=>idx[k]===-1?"":(cells[idx[k]]!==undefined?String(cells[idx[k]]).trim():"");
+    const rec={
+      development:get("development"), unit:get("unit"),
+      purchasePrice:num(get("purchasePrice")), currentValue:num(get("currentValue")),
+      unrealised:num(get("unrealised")), paid:num(get("paid")),
+      outstanding:num(get("outstanding")), ownership:get("ownership"),
+      purpose:get("purpose"), location:get("location"), type:get("type"),
+      rented:get("rented"), status:get("status"), assetClass:get("assetClass"),
+      pctPaidRaw:get("pctPaid")
+    };
+    if(!rec.development && !rec.currentValue) continue;
+    rec.assetClass=classify(rec);
+    rec.holder=matchHolder(rec.ownership);
+    if(!rec.holder && rec.ownership) unmatched.add(rec.ownership);
+    rec.holderLabel=rec.holder?holderById(rec.holder).label:(rec.ownership||"Unassigned");
+    rec.building=rec.development.trim();
+    rec.unit=cleanUnit(rec.unit);
+    rec.label=rec.unit?rec.building+", Unit "+rec.unit:rec.building;
+    if(rec.assetClass==="Property"&&rec.unrealised===0&&rec.purchasePrice>0)
+      rec.unrealised=rec.currentValue-rec.purchasePrice;
+    out.push(rec);
+  }
+  if(!out.length) throw new Error("The sheet was read successfully but contains no data rows.");
+  return {records:out, unmatched:[...unmatched]};
+}
+
+/* ===========================================================================
+   5. AGGREGATION
+   =========================================================================== */
+const sum=(a,f)=>a.reduce((t,r)=>t+f(r),0);
+
+function tally(records){
+  const props=records.filter(r=>r.assetClass==="Property");
+  return {
+    records, props,
+    total:sum(records,r=>r.currentValue),
+    property:sum(props,r=>r.currentValue),
+    cash:sum(records.filter(r=>r.assetClass==="Cash"),r=>r.currentValue),
+    investments:sum(records.filter(r=>r.assetClass==="Investments"),r=>r.currentValue),
+    other:sum(records.filter(r=>r.assetClass==="Other"),r=>r.currentValue),
+    paid:sum(props,r=>r.paid),
+    outstanding:sum(props,r=>r.outstanding),
+    unrealised:sum(props,r=>r.unrealised),
+    handedOver:props.filter(r=>norm(r.status).startsWith("handed")).length,
+    propertyCount:props.length,
+    count:records.length
+  };
+}
+function descendants(id){
+  const out=[id];
+  HOLDERS.filter(h=>h.parent===id).forEach(h=>out.push(...descendants(h.id)));
+  return out;
+}
+function summarise(records){
+  const direct={}, consolidated={};
+  HOLDERS.forEach(h=>{
+    direct[h.id]=tally(records.filter(r=>r.holder===h.id));
+    const ids=descendants(h.id);
+    consolidated[h.id]=tally(records.filter(r=>ids.includes(r.holder)));
+  });
+  const unassigned=tally(records.filter(r=>!r.holder));
+  return {direct, consolidated, unassigned, group:tally(records)};
+}
+
+/* ===========================================================================
+   6. CHART BUILDERS
+   =========================================================================== */
+function baseLayout(extra){
+  return Object.assign({
+    font:PLOT_FONT, margin:{l:150,r:20,t:8,b:40},
+    paper_bgcolor:"rgba(0,0,0,0)", plot_bgcolor:"rgba(0,0,0,0)",
+    xaxis:{gridcolor:LINE, zerolinecolor:LINE, automargin:true},
+    yaxis:{gridcolor:LINE, zerolinecolor:LINE, automargin:true},
+    legend:{orientation:"h", y:-0.18, font:PLOT_FONT},
+    hoverlabel:{bgcolor:"#FFFFFF", bordercolor:LINE, font:{family:"IBM Plex Sans, sans-serif", size:12, color:INK}}
+  }, extra||{});
+}
+function hbar(el,labels,values,colours,reverse){
+  Plotly.newPlot(el,[{
+    type:"bar", orientation:"h", x:values, y:labels,
+    marker:{color:colours},
+    hovertemplate:"%{y}<br>"+CONFIG.currency+" %{x:,.0f}<extra></extra>"
+  }], baseLayout({yaxis:{automargin:true, gridcolor:"rgba(0,0,0,0)", autorange:reverse?"reversed":true}}), PLOT_CFG);
+}
+function donut(el,labels,values,colours,centre){
+  Plotly.newPlot(el,[{
+    type:"pie", hole:.62, labels, values, sort:false,
+    marker:{colors:colours, line:{color:"#FFFFFF", width:2}},
+    textinfo:"percent", textposition:"inside",
+    insidetextfont:{color:"#FFFFFF", size:12, family:"IBM Plex Sans, sans-serif"},
+    hovertemplate:"%{label}<br>"+CONFIG.currency+" %{value:,.0f}<extra></extra>"
+  }], baseLayout({
+    margin:{l:10,r:10,t:10,b:40},
+    annotations: centre?[{text:centre, showarrow:false, font:{family:"Source Serif 4, serif", size:15, color:INK}}]:[]
+  }), PLOT_CFG);
+}
+/* Several developments hold more than one apartment. Charts are drawn at
+   building level so they stay legible, while the register below remains at
+   unit level. Assets that are not property are never grouped. */
+function rollup(records){
+  const m=new Map();
+  records.forEach(r=>{
+    const key=r.assetClass==="Property" ? (r.building||r.label) : r.label;
+    if(!m.has(key)) m.set(key,{key, units:0, purchasePrice:0, currentValue:0, unrealised:0,
+      paid:0, outstanding:0, handedOver:0, assetClass:r.assetClass, holders:new Set(), locations:new Set()});
+    const e=m.get(key);
+    e.units++; e.purchasePrice+=r.purchasePrice; e.currentValue+=r.currentValue;
+    e.unrealised+=r.unrealised; e.paid+=r.paid; e.outstanding+=r.outstanding;
+    if(norm(r.status).startsWith("handed")) e.handedOver++;
+    if(r.holder) e.holders.add(r.holder);
+    if(r.location) e.locations.add(r.location);
+    if(r.assetClass!=="Property") e.assetClass=r.assetClass;
+  });
+  return [...m.values()];
+}
+function rollLabel(r){ return r.units>1 ? r.key+"  ("+r.units+" units)" : r.key; }
+function rollColour(r,byHolder){
+  if(byHolder) return r.holders.size===1 ? holderColour([...r.holders][0]) : INK2;
+  return CLASS_COLOURS[r.assetClass]||INK2;
+}
+function sizeChart(id,n){
+  const el=document.getElementById(id);
+  if(el) el.style.height=Math.max(260, Math.min(1100, n*28+70))+"px";
+}
+function groupBy(rows,keyFn,valFn){
+  const m=new Map();
+  rows.forEach(r=>{ const k=(keyFn(r)||"Unspecified").toString().trim()||"Unspecified"; m.set(k,(m.get(k)||0)+valFn(r)); });
+  return [...m.entries()].sort((a,b)=>b[1]-a[1]);
+}
+
+/* ===========================================================================
+   7. VIEW BUILDING
+   =========================================================================== */
+const REG_COLS=[
+  {k:"label", t:"Asset"},
+  {k:"holderLabel", t:"Held by", dot:true},
+  {k:"assetClass", t:"Class", tag:true},
+  {k:"purchasePrice", t:"Purchase price", num:true},
+  {k:"currentValue", t:"Current value", num:true},
+  {k:"unrealised", t:"Unrealised G/L", num:true, signed:true},
+  {k:"paid", t:"Paid", num:true},
+  {k:"outstanding", t:"Outstanding", num:true},
+  {k:"purpose", t:"Purpose"},
+  {k:"location", t:"Location"},
+  {k:"type", t:"Type"},
+  {k:"rented", t:"Rented"},
+  {k:"status", t:"Status"}
+];
+function tableHTML(records,opts){
+  opts=opts||{};
+  const cols=REG_COLS.filter(c=>!(opts.hideHolder&&c.k==="holderLabel"));
+  const head="<tr>"+cols.map(c=>
+    '<th class="'+(c.num?"num ":"")+(opts.sortable?"sortable ":"")+(opts.sortKey===c.k?"sorted"+(opts.sortDesc?" desc":""):"")+'" data-key="'+c.k+'">'+c.t+"</th>"
+  ).join("")+"</tr>";
+  const body=records.map(r=>"<tr>"+cols.map(c=>{
+    const v=r[c.k];
+    if(c.num) return '<td class="num'+(c.signed&&v!==0?(v<0?" neg":" pos"):"")+'">'+(v?money(v):"\u2014")+"</td>";
+    if(c.tag) return '<td><span class="tag">'+esc(v||"\u2014")+"</span></td>";
+    if(c.dot) return '<td><span class="holderdot" style="background:'+holderColour(r.holder)+'"></span>'+esc(v)+"</td>";
+    return "<td>"+esc(v||"\u2014")+"</td>";
+  }).join("")+"</tr>").join("")
+  || '<tr><td colspan="'+cols.length+'">No rows match that filter.</td></tr>';
+  return '<div class="tablescroll"><table><thead>'+head+"</thead><tbody>"+body+"</tbody></table></div>";
+}
+
+function buildingTableHTML(records,opts){
+  opts=opts||{};
+  const rows=rollup(records.filter(r=>r.assetClass==="Property")).sort((a,b)=>b.currentValue-a.currentValue);
+  if(!rows.length) return "";
+  const multi=rows.some(r=>r.units>1);
+  const head="<tr><th>Development</th><th class=\"num\">Units</th>"+
+    (opts.showHolder?"<th>Held by</th>":"")+
+    "<th>Location</th><th class=\"num\">Purchase price</th><th class=\"num\">Current value</th>"+
+    "<th class=\"num\">Unrealised G/L</th><th class=\"num\">Paid</th><th class=\"num\">Outstanding</th><th class=\"num\">Handed over</th></tr>";
+  const body=rows.map(r=>{
+    const hs=[...r.holders].map(id=>holderById(id)?holderById(id).label:id);
+    return "<tr><td>"+esc(r.key)+'</td><td class="num">'+r.units+"</td>"+
+      (opts.showHolder?"<td>"+(r.holders.size===1?'<span class="holderdot" style="background:'+holderColour([...r.holders][0])+'"></span>':"")+esc(hs.join(", "))+"</td>":"")+
+      "<td>"+esc([...r.locations].join(", ")||"\u2014")+"</td>"+
+      '<td class="num">'+money(r.purchasePrice)+"</td>"+
+      '<td class="num">'+money(r.currentValue)+"</td>"+
+      '<td class="num'+(r.unrealised?(r.unrealised<0?" neg":" pos"):"")+'">'+(r.unrealised?money(r.unrealised):"\u2014")+"</td>"+
+      '<td class="num">'+money(r.paid)+"</td>"+
+      '<td class="num">'+money(r.outstanding)+"</td>"+
+      '<td class="num">'+r.handedOver+" of "+r.units+"</td></tr>";
+  }).join("");
+  return '<div class="tablescroll"><table><thead>'+head+"</thead><tbody>"+body+"</tbody></table></div>"+
+    (multi?'<p class="lede" style="margin:12px 0 0">Developments holding more than one apartment are consolidated on a single line. Individual units are listed in the register.</p>':"");
+}
+
+function kpiHTML(items){
+  return '<div class="kpis">'+items.map(i=>
+    '<div class="kpi'+(i.headline?" headline":"")+'"><div class="k">'+esc(i.k)+'</div><div class="v '+(i.cls||"")+'">'+i.v+"</div></div>"
+  ).join("")+"</div>";
+}
+function panelHTML(title,inner,lede){
+  return '<div class="panel"><h2>'+esc(title)+"</h2>"+(lede?'<p class="lede">'+esc(lede)+"</p>":"")+inner+"</div>";
+}
+function chartHTML(id,tall){ return '<div class="chart'+(tall?" tall":"")+'" id="'+id+'"></div>'; }
+
+/* ---- group overview ---- */
+function overviewHTML(s){
+  const g=s.group, luxCon=s.consolidated[STRUCTURE_ROOT];
+  const nodes=[];
+  nodes.push({cls:"tier1", colour:INK, name:"Combined position", role:"All holders, ultimately owned by "+CONFIG.beneficialOwner, amt:g.total, sub:"Net worth across all holders"});
+  const personal=HOLDERS.filter(h=>!h.parent&&h.id!==STRUCTURE_ROOT);
+  personal.forEach(h=>{
+    const d=s.direct[h.id];
+    nodes.push({cls:"child", colour:h.colour, name:h.label, role:h.role, amt:d.total, sub:share(d.total,g.total)});
+  });
+  nodes.push({cls:"child", colour:holderColour(STRUCTURE_ROOT), name:holderById(STRUCTURE_ROOT).label,
+              role:"Foundation, consolidated with its SPVs", amt:luxCon.total, sub:share(luxCon.total,g.total)});
+  const luxDirect=s.direct[STRUCTURE_ROOT];
+  nodes.push({cls:"grandchild", colour:holderColour(STRUCTURE_ROOT), name:"Held directly by the foundation",
+              role:luxDirect.count+" "+(luxDirect.count===1?"asset":"assets"), amt:luxDirect.total, sub:""});
+  HOLDERS.filter(h=>h.parent===STRUCTURE_ROOT).forEach(h=>{
+    const d=s.direct[h.id];
+    nodes.push({cls:"grandchild", colour:h.colour, name:h.label, role:"Special purpose vehicle", amt:d.total, sub:""});
+  });
+  if(s.unassigned.total>0)
+    nodes.push({cls:"child", colour:INK2, name:"Unassigned ownership", role:"Rows whose Ownership value matched no holder", amt:s.unassigned.total, sub:""});
+
+  const tree=nodes.map(n=>
+    '<div class="node '+n.cls+'"><div class="nm"><i style="background:'+n.colour+'"></i><div><b>'+esc(n.name)+"</b><br><span>"+esc(n.role)+"</span></div></div>"+
+    '<div class="amt">'+money(n.amt)+(n.sub?"<em>"+esc(n.sub)+"</em>":"")+"</div></div>"
+  ).join("");
+
+  const parts=HOLDERS.map(h=>({name:h.label, value:s.direct[h.id].total, colour:h.colour}))
+                     .filter(p=>p.value>0);
+  if(s.unassigned.total>0) parts.push({name:"Unassigned", value:s.unassigned.total, colour:INK2});
+  const bar=parts.map(p=>'<span style="background:'+p.colour+';width:'+(p.value/g.total*100)+'%" title="'+esc(p.name)+'"></span>').join("");
+  const legend=parts.map(p=>'<div><i style="background:'+p.colour+'"></i>'+esc(p.name)+" <em>"+moneyShort(p.value)+"</em></div>").join("");
+
+  return '<div class="hero">'+
+    '<div class="heroTop"><div><div class="k">Net worth across all holders</div><div class="v">'+money(g.total)+"</div></div>"+
+    '<div class="note">Each entity is shown at its own direct holdings. The personal line covers only what '+esc(CONFIG.beneficialOwner)+' holds in his own name. The foundation line consolidates its own assets with the vehicles beneath it, so it is not added to them.</div></div>'+
+    '<div class="tree">'+tree+"</div>"+
+    '<div class="compbar">'+bar+'</div><div class="complegend">'+legend+"</div></div>"+
+    kpiHTML([
+      {k:"Property value", v:money(g.property), headline:true},
+      {k:"Cash", v:money(g.cash), headline:true},
+      {k:"Investments", v:money(g.investments), headline:true},
+      {k:"Paid on property", v:money(g.paid)},
+      {k:"Outstanding balance", v:money(g.outstanding)},
+      {k:"Unrealised gain and loss", v:money(g.unrealised), cls:g.unrealised>0?"pos":(g.unrealised<0?"neg":"")},
+      {k:"Handed over", v:g.handedOver+" of "+g.propertyCount}
+    ])+
+    '<div class="grid two">'+
+      panelHTML("Net worth by asset holder", chartHTML("ov_holder"), "Direct holdings only, so the four figures sum to net worth.")+
+      panelHTML("Net worth by asset class", chartHTML("ov_class"))+
+    "</div>"+
+    '<div class="grid two">'+
+      panelHTML("Current value by asset", chartHTML("ov_assets", true), "Coloured by the entity that holds the asset.")+
+      panelHTML("Property value by location", chartHTML("ov_location", true))+
+    "</div>"+
+    panelHTML("Property by development", buildingTableHTML(g.records,{showHolder:true}),
+      "Every development across all holders, with the apartments in each consolidated onto one line.");
+}
+
+/* ---- holder view ---- */
+function holderHTML(h,s){
+  const con=s.consolidated[h.id], dir=s.direct[h.id];
+  const hasChildren=HOLDERS.some(c=>c.parent===h.id);
+  const t=hasChildren?con:dir;
+  if(t.count===0){
+    return '<div class="panel"><h2>'+esc(h.label)+'</h2><div class="empty"><p>No assets are recorded against '+esc(h.label)+
+      ' in the sheet. Add a row with <code>'+esc(h.match[0])+'</code> in the Ownership column and it will appear here on the next refresh.</p></div></div>';
+  }
+  const p=h.id;
+  let kpis=[{k:hasChildren?"Consolidated value":"Total value", v:money(t.total), headline:true}];
+  if(hasChildren) kpis.push({k:"Held directly", v:money(dir.total), headline:true});
+  kpis=kpis.concat([
+    {k:"Property", v:money(t.property)},
+    {k:"Cash", v:money(t.cash)},
+    {k:"Investments", v:money(t.investments)},
+    {k:"Paid on property", v:money(t.paid)},
+    {k:"Outstanding balance", v:money(t.outstanding)},
+    {k:"Unrealised gain and loss", v:money(t.unrealised), cls:t.unrealised>0?"pos":(t.unrealised<0?"neg":"")},
+    {k:"Handed over", v:t.handedOver+" of "+t.propertyCount}
+  ]);
+
+  let html=kpiHTML(kpis);
+  const blocks=[];
+  blocks.push(panelHTML("Current value by asset", chartHTML(p+"_assets", t.count>6)));
+  blocks.push(panelHTML("Split by asset class", chartHTML(p+"_class")));
+  html+='<div class="grid two">'+blocks.join("")+"</div>";
+
+  if(t.propertyCount>0){
+    html+='<div class="grid two">'+
+      panelHTML("Payment status by property", chartHTML(p+"_pay"))+
+      panelHTML("Unrealised gain and loss by property", chartHTML(p+"_gl"))+
+    "</div>"+
+    '<div class="grid two">'+
+      panelHTML("Property value by purpose", chartHTML(p+"_purpose"))+
+      panelHTML("Property value by location", chartHTML(p+"_location"))+
+    "</div>";
+  }
+  const bt=buildingTableHTML(t.records,{showHolder:hasChildren});
+  if(bt) html+=panelHTML("Property by development", bt);
+  html+=panelHTML((hasChildren?"Assets across the structure":"Assets held"), tableHTML(
+    [...t.records].sort((a,b)=>b.currentValue-a.currentValue), {hideHolder:!hasChildren}));
+  return html;
+}
+
+/* ---- charts for a holder ---- */
+function drawHolderCharts(h,s){
+  const con=s.consolidated[h.id], dir=s.direct[h.id];
+  const hasChildren=HOLDERS.some(c=>c.parent===h.id);
+  const t=hasChildren?con:dir;
+  if(t.count===0) return;
+  const p=h.id;
+  const rows=rollup(t.records).sort((a,b)=>a.currentValue-b.currentValue);
+  sizeChart(p+"_assets", rows.length);
+  hbar(p+"_assets", rows.map(rollLabel), rows.map(r=>r.currentValue),
+       rows.map(r=>rollColour(r,hasChildren)), false);
+
+  const byClass=groupBy(t.records,r=>r.assetClass,r=>r.currentValue);
+  donut(p+"_class", byClass.map(e=>e[0]), byClass.map(e=>e[1]),
+        byClass.map(e=>CLASS_COLOURS[e[0]]||INK2), moneyShort(t.total));
+
+  if(t.propertyCount>0){
+    const pr=rollup(t.props).sort((a,b)=>b.currentValue-a.currentValue);
+    const pl=pr.map(rollLabel);
+    sizeChart(p+"_pay", pr.length);
+    Plotly.newPlot(p+"_pay",[
+      {type:"bar", orientation:"h", name:"Paid", x:pr.map(r=>r.paid), y:pl,
+       marker:{color:h.colour}, hovertemplate:"Paid "+CONFIG.currency+" %{x:,.0f}<extra></extra>"},
+      {type:"bar", orientation:"h", name:"Outstanding", x:pr.map(r=>r.outstanding), y:pl,
+       marker:{color:LINE}, hovertemplate:"Outstanding "+CONFIG.currency+" %{x:,.0f}<extra></extra>"}
+    ], baseLayout({barmode:"stack", yaxis:{automargin:true, autorange:"reversed", gridcolor:"rgba(0,0,0,0)"}}), PLOT_CFG);
+
+    const gl=rollup(t.props).sort((a,b)=>a.unrealised-b.unrealised);
+    sizeChart(p+"_gl", gl.length);
+    hbar(p+"_gl", gl.map(rollLabel), gl.map(r=>r.unrealised), gl.map(r=>r.unrealised<0?NEG:POS), false);
+
+    const byPurpose=groupBy(t.props,r=>r.purpose,r=>r.currentValue);
+    donut(p+"_purpose", byPurpose.map(e=>e[0]), byPurpose.map(e=>e[1]), WHEEL, null);
+
+    const byLoc=groupBy(t.props,r=>r.location,r=>r.currentValue);
+    sizeChart(p+"_location", byLoc.length);
+    hbar(p+"_location", byLoc.map(e=>e[0]), byLoc.map(e=>e[1]), h.colour, true);
+  }
+}
+
+function drawOverviewCharts(s){
+  const g=s.group;
+  const hs=HOLDERS.filter(h=>s.direct[h.id].total>0);
+  donut("ov_holder", hs.map(h=>h.label), hs.map(h=>s.direct[h.id].total), hs.map(h=>h.colour), moneyShort(g.total));
+  const byClass=groupBy(g.records,r=>r.assetClass,r=>r.currentValue);
+  donut("ov_class", byClass.map(e=>e[0]), byClass.map(e=>e[1]), byClass.map(e=>CLASS_COLOURS[e[0]]||INK2), null);
+  const rows=rollup(g.records).sort((a,b)=>a.currentValue-b.currentValue);
+  sizeChart("ov_assets", rows.length);
+  hbar("ov_assets", rows.map(rollLabel), rows.map(r=>r.currentValue), rows.map(r=>rollColour(r,true)), false);
+  const byLoc=groupBy(g.props,r=>r.location,r=>r.currentValue);
+  sizeChart("ov_location", byLoc.length);
+  hbar("ov_location", byLoc.map(e=>e[0]), byLoc.map(e=>e[1]), INK2, true);
+}
+
+/* ---- register tab ---- */
+let allRecords=[], sortKey="currentValue", sortDesc=true;
+function registerHTML(){
+  return '<div class="panel"><div class="registerhead"><h2 style="margin:0">Full asset register</h2>'+
+    '<input class="search" id="search" type="search" placeholder="Filter by asset, holder, location or status" aria-label="Filter register"></div>'+
+    '<div id="registerTable"></div></div>';
+}
+function drawRegister(){
+  const box=document.getElementById("registerTable"); if(!box) return;
+  const q=norm(document.getElementById("search").value);
+  const rows=allRecords
+    .filter(r=>!q||norm([r.label,r.holderLabel,r.location,r.type,r.status,r.purpose,r.assetClass].join(" ")).includes(q))
+    .sort((a,b)=>{
+      const x=a[sortKey], y=b[sortKey];
+      if(typeof x==="number"&&typeof y==="number") return sortDesc?y-x:x-y;
+      return sortDesc?String(y).localeCompare(String(x)):String(x).localeCompare(String(y));
+    });
+  box.innerHTML=tableHTML(rows,{sortable:true, sortKey, sortDesc});
+  box.querySelectorAll("th.sortable").forEach(th=>th.addEventListener("click",()=>{
+    const k=th.dataset.key;
+    if(sortKey===k) sortDesc=!sortDesc; else { sortKey=k; sortDesc=true; }
+    drawRegister();
+  }));
+}
+
+/* ===========================================================================
+   8. ASSEMBLY
+   =========================================================================== */
+function chartsUnavailable(msg){
+  document.querySelectorAll(".chart").forEach(c=>{
+    c.style.height="auto";
+    c.innerHTML='<div class="empty">'+esc(msg||"The charting library could not be loaded, so this figure is not drawn. All values remain available in the figures above and in the register.")+"</div>";
+  });
+}
+
+function render(s){
+  const tabs=[{id:"overview", label:"Group overview", colour:INK}]
+    .concat(HOLDERS.map(h=>({id:h.id, label:h.label, colour:h.colour})))
+    .concat([{id:"register", label:"Asset register", colour:INK}]);
+
+  document.getElementById("tabnav").innerHTML=tabs.map((t,i)=>
+    '<button role="tab" data-panel="panel-'+t.id+'" aria-selected="'+(i===0)+'" style="color:'+(i===0?INK:INK2)+'">'+
+    '<i style="background:'+t.colour+'"></i>'+esc(t.label)+"</button>").join("");
+
+  document.getElementById("panels").innerHTML=tabs.map((t,i)=>{
+    let inner;
+    if(t.id==="overview") inner=overviewHTML(s);
+    else if(t.id==="register") inner=registerHTML();
+    else inner=holderHTML(holderById(t.id),s);
+    return '<section class="tab" id="panel-'+t.id+'" role="tabpanel"'+(i===0?"":" hidden")+">"+inner+"</section>";
+  }).join("");
+
+  const drawAll=()=>{
+    try{ drawOverviewCharts(s); HOLDERS.forEach(h=>drawHolderCharts(h,s)); }
+    catch(e){ chartsUnavailable("The charts could not be drawn. "+(e.message||e)); }
+  };
+  if(window.Plotly) drawAll();
+  else if(window.__plotlyResolved) chartsUnavailable();
+  else window.__plotlyCallbacks.push(ok=>{ ok?drawAll():chartsUnavailable(); });
+
+  drawRegister();
+  document.getElementById("search").addEventListener("input",drawRegister);
+
+  const btns=[...document.querySelectorAll("#tabnav button")];
+  btns.forEach(b=>b.addEventListener("click",()=>{
+    btns.forEach(o=>{
+      const sel=o===b;
+      o.setAttribute("aria-selected",sel);
+      o.style.color=sel?INK:INK2;
+      document.getElementById(o.dataset.panel).hidden=!sel;
+    });
+    if(window.Plotly) document.querySelectorAll(".chart").forEach(c=>{ if(c.offsetParent!==null) Plotly.Plots.resize(c); });
+  }));
+}
+
+/* ---- source handling ---- */
+function sourceUrl(){
+  let stored="";
+  try{ stored=localStorage.getItem(STORE_KEY)||""; }catch(e){ stored=""; }
+  return stored || CONFIG.csvUrl || "";
+}
+function clearOverride(){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} }
+function showSetup(msg){
+  document.getElementById("content").hidden=true;
+  document.getElementById("app").innerHTML=
+    '<div class="notice"><h2>Connect the source sheet</h2>'+
+    "<p>"+(msg||"This statement reads the Google Sheet every time it is opened. Paste the published CSV link below. It is stored in this browser only and is never written into the page source.")+"</p>"+
+    "<ol><li>In the sheet, choose <code>File &gt; Share &gt; Publish to web</code>.</li>"+
+    "<li>Select the register tab and the <code>Comma-separated values (.csv)</code> format, then publish.</li>"+
+    "<li>Paste the link here and save.</li></ol>"+
+    '<div class="setuprow"><input id="urlInput" type="url" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" value="'+esc(sourceUrl())+'">'+
+    '<button class="act" id="urlSave" type="button">Save and load</button>'+
+    (CONFIG.csvUrl?'<button class="act" id="urlReset" type="button">Use the built in link</button>':"")+
+    "</div></div>";
+  document.getElementById("urlSave").addEventListener("click",()=>{
+    const v=document.getElementById("urlInput").value.trim();
+    if(!v) return;
+    try{ localStorage.setItem(STORE_KEY,v); }catch(e){ CONFIG.csvUrl=v; }
+    document.getElementById("refreshBtn").disabled=false;
+    load();
+  });
+  const reset=document.getElementById("urlReset");
+  if(reset) reset.addEventListener("click",()=>{ clearOverride(); document.getElementById("refreshBtn").disabled=false; load(); });
+  document.getElementById("refreshBtn").disabled=!CONFIG.csvUrl;
+}
+function showError(msg){
+  document.getElementById("content").hidden=true;
+  document.getElementById("app").innerHTML=
+    '<div class="notice error"><h2>The data could not be loaded</h2><p>'+esc(msg)+"</p>"+
+    "<p>Check that the sheet is still published to the web and that the saved link points at the correct tab.</p>"+
+    '<div class="setuprow"><button class="act" id="resetSrc" type="button">Change the source link</button></div></div>';
+  document.getElementById("resetSrc").addEventListener("click",()=>showSetup());
+}
+
+async function load(){
+  const url=sourceUrl();
+  if(!url){ showSetup(); return; }
+  const btn=document.getElementById("refreshBtn");
+  btn.disabled=true; btn.textContent="Refreshing";
+  try{
+    const bust=url+(url.includes("?")?"&":"?")+"cachebust="+Date.now();
+    const res=await fetch(bust,{cache:"no-store"});
+    if(!res.ok) throw new Error("The sheet returned status "+res.status+".");
+    const text=await res.text();
+    if(/^\s*</.test(text)) throw new Error("That link returned a web page rather than CSV data. Use the Publish to web link ending in output=csv.");
+    const parsed=toRecords(parseCSV(text));
+    allRecords=parsed.records;
+    const s=summarise(allRecords);
+
+    document.getElementById("app").innerHTML="";
+    document.getElementById("content").hidden=false;
+    render(s);
+
+    const now=new Date();
+    document.getElementById("stamp").textContent="Refreshed "+now.toLocaleString("en-GB",
+      {day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+    const warn=parsed.unmatched.length
+      ? " Ownership values not recognised as a holder: "+parsed.unmatched.join(", ")+"."
+      : "";
+    document.getElementById("footer").innerHTML=
+      "<span>Confidential. All figures in "+CONFIG.currency+", drawn live from the source sheet and only as current as that sheet."+esc(warn)+"</span>"+
+      '<button type="button" id="changeSrc">Change the source link</button>';
+    document.getElementById("changeSrc").addEventListener("click",()=>showSetup());
+  }catch(err){
+    const m=String(err&&err.message||err);
+    showError(/failed to fetch|networkerror|load failed/i.test(m)
+      ? "The browser could not reach the sheet. The usual cause is that publishing has been switched off in the sheet, or that the machine is offline. Reopen File, Share, Publish to web in the sheet and confirm the CSV link is still active."
+      : m);
+  }finally{
+    btn.disabled=false; btn.textContent="Refresh data";
+  }
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("clientLine").textContent=CONFIG.statementFor;
+  document.getElementById("refreshBtn").addEventListener("click",load);
+  load();
+  if(CONFIG.autoRefreshMinutes>0) setInterval(()=>{ if(sourceUrl()) load(); }, CONFIG.autoRefreshMinutes*60*1000);
+});
+window.addEventListener("resize",()=>{
+  if(window.Plotly) document.querySelectorAll(".chart").forEach(c=>{ if(c.offsetParent!==null) Plotly.Plots.resize(c); });
+});
+</script>
+</body>
+</html>
