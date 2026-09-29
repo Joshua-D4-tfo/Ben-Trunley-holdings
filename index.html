@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -321,6 +320,16 @@ function classify(rec){
   }
   return "Other";
 }
+/* Whether a unit is let is only meaningful against stock that can be let. A
+   unit that has not been handed over is therefore reported separately rather
+   than being counted as vacant. */
+const TENANCY=["Rented","Vacant","Not yet handed over"];
+const TENANCY_COLOURS={"Rented":"#1F7A4D","Vacant":"#C08A2E","Not yet handed over":"#A9B4BD"};
+function tenancy(rec){
+  if(rec.assetClass!=="Property") return null;
+  if(!norm(rec.status).startsWith("handed")) return "Not yet handed over";
+  return norm(rec.rented)==="yes" ? "Rented" : "Vacant";
+}
 function matchHolder(ownership){
   const o=norm(ownership);
   if(!o) return null;
@@ -349,6 +358,7 @@ function toRecords(rows){
     };
     if(!rec.development && !rec.currentValue) continue;
     rec.assetClass=classify(rec);
+    rec.tenancy=tenancy(rec);
     rec.holder=matchHolder(rec.ownership);
     if(!rec.holder && rec.ownership) unmatched.add(rec.ownership);
     rec.holderLabel=rec.holder?holderById(rec.holder).label:(rec.ownership||"Unassigned");
@@ -381,6 +391,12 @@ function tally(records){
     outstanding:sum(props,r=>r.outstanding),
     unrealised:sum(props,r=>r.unrealised),
     handedOver:props.filter(r=>norm(r.status).startsWith("handed")).length,
+    rentedUnits:props.filter(r=>r.tenancy==="Rented").length,
+    vacantUnits:props.filter(r=>r.tenancy==="Vacant").length,
+    pendingUnits:props.filter(r=>r.tenancy==="Not yet handed over").length,
+    rentedValue:sum(props.filter(r=>r.tenancy==="Rented"),r=>r.currentValue),
+    vacantValue:sum(props.filter(r=>r.tenancy==="Vacant"),r=>r.currentValue),
+    pendingValue:sum(props.filter(r=>r.tenancy==="Not yet handed over"),r=>r.currentValue),
     propertyCount:props.length,
     count:records.length
   };
@@ -441,11 +457,15 @@ function rollup(records){
   records.forEach(r=>{
     const key=r.assetClass==="Property" ? (r.building||r.label) : r.label;
     if(!m.has(key)) m.set(key,{key, units:0, purchasePrice:0, currentValue:0, unrealised:0,
-      paid:0, outstanding:0, handedOver:0, assetClass:r.assetClass, holders:new Set(), locations:new Set()});
+      paid:0, outstanding:0, handedOver:0, rentedUnits:0, vacantUnits:0, pendingUnits:0,
+      assetClass:r.assetClass, holders:new Set(), locations:new Set()});
     const e=m.get(key);
     e.units++; e.purchasePrice+=r.purchasePrice; e.currentValue+=r.currentValue;
     e.unrealised+=r.unrealised; e.paid+=r.paid; e.outstanding+=r.outstanding;
     if(norm(r.status).startsWith("handed")) e.handedOver++;
+    if(r.tenancy==="Rented") e.rentedUnits++;
+    else if(r.tenancy==="Vacant") e.vacantUnits++;
+    else if(r.tenancy==="Not yet handed over") e.pendingUnits++;
     if(r.holder) e.holders.add(r.holder);
     if(r.location) e.locations.add(r.location);
     if(r.assetClass!=="Property") e.assetClass=r.assetClass;
@@ -460,6 +480,24 @@ function rollColour(r,byHolder){
 function sizeChart(id,n){
   const el=document.getElementById(id);
   if(el) el.style.height=Math.max(260, Math.min(1100, n*28+70))+"px";
+}
+function drawTenancy(idDonut,idBars,t){
+  const vals=[t.rentedValue,t.vacantValue,t.pendingValue];
+  donut(idDonut, TENANCY, vals, TENANCY.map(k=>TENANCY_COLOURS[k]),
+        t.rentedUnits+" of "+t.propertyCount+" let");
+  const rows=rollup(t.props).sort((a,b)=>(b.rentedUnits+b.vacantUnits+b.pendingUnits)-(a.rentedUnits+a.vacantUnits+a.pendingUnits)||b.currentValue-a.currentValue);
+  const labels=rows.map(rollLabel);
+  sizeChart(idBars, rows.length);
+  Plotly.newPlot(idBars,[
+    {type:"bar", orientation:"h", name:"Rented", x:rows.map(r=>r.rentedUnits), y:labels,
+     marker:{color:TENANCY_COLOURS.Rented}, hovertemplate:"%{y}<br>Rented, %{x} units<extra></extra>"},
+    {type:"bar", orientation:"h", name:"Vacant", x:rows.map(r=>r.vacantUnits), y:labels,
+     marker:{color:TENANCY_COLOURS.Vacant}, hovertemplate:"%{y}<br>Vacant, %{x} units<extra></extra>"},
+    {type:"bar", orientation:"h", name:"Not yet handed over", x:rows.map(r=>r.pendingUnits), y:labels,
+     marker:{color:TENANCY_COLOURS["Not yet handed over"]}, hovertemplate:"%{y}<br>Not yet handed over, %{x} units<extra></extra>"}
+  ], baseLayout({barmode:"stack",
+      xaxis:{gridcolor:LINE, zerolinecolor:LINE, automargin:true, tickformat:",d", title:{text:"Units", font:PLOT_FONT}},
+      yaxis:{automargin:true, autorange:"reversed", gridcolor:"rgba(0,0,0,0)"}}), PLOT_CFG);
 }
 function groupBy(rows,keyFn,valFn){
   const m=new Map();
@@ -510,7 +548,8 @@ function buildingTableHTML(records,opts){
   const head="<tr><th>Development</th><th class=\"num\">Units</th>"+
     (opts.showHolder?"<th>Held by</th>":"")+
     "<th>Location</th><th class=\"num\">Purchase price</th><th class=\"num\">Current value</th>"+
-    "<th class=\"num\">Unrealised G/L</th><th class=\"num\">Paid</th><th class=\"num\">Outstanding</th><th class=\"num\">Handed over</th></tr>";
+    "<th class=\"num\">Unrealised G/L</th><th class=\"num\">Paid</th><th class=\"num\">Outstanding</th>"+
+    "<th class=\"num\">Handed over</th><th class=\"num\">Let</th><th class=\"num\">Vacant</th></tr>";
   const body=rows.map(r=>{
     const hs=[...r.holders].map(id=>holderById(id)?holderById(id).label:id);
     return "<tr><td>"+esc(r.key)+'</td><td class="num">'+r.units+"</td>"+
@@ -521,7 +560,9 @@ function buildingTableHTML(records,opts){
       '<td class="num'+(r.unrealised?(r.unrealised<0?" neg":" pos"):"")+'">'+(r.unrealised?money(r.unrealised):"\u2014")+"</td>"+
       '<td class="num">'+money(r.paid)+"</td>"+
       '<td class="num">'+money(r.outstanding)+"</td>"+
-      '<td class="num">'+r.handedOver+" of "+r.units+"</td></tr>";
+      '<td class="num">'+r.handedOver+" of "+r.units+"</td>"+
+      '<td class="num">'+r.rentedUnits+"</td>"+
+      '<td class="num'+(r.vacantUnits?" neg":"")+'">'+r.vacantUnits+"</td></tr>";
   }).join("");
   return '<div class="tablescroll"><table><thead>'+head+"</thead><tbody>"+body+"</tbody></table></div>"+
     (multi?'<p class="lede" style="margin:12px 0 0">Developments holding more than one apartment are consolidated on a single line. Individual units are listed in the register.</p>':"");
@@ -582,7 +623,10 @@ function overviewHTML(s){
       {k:"Paid on property", v:money(g.paid)},
       {k:"Outstanding balance", v:money(g.outstanding)},
       {k:"Unrealised gain and loss", v:money(g.unrealised), cls:g.unrealised>0?"pos":(g.unrealised<0?"neg":"")},
-      {k:"Handed over", v:g.handedOver+" of "+g.propertyCount}
+      {k:"Handed over", v:g.handedOver+" of "+g.propertyCount},
+      {k:"Let", v:g.rentedUnits+" of "+g.handedOver+" handed over"},
+      {k:"Vacant and lettable", v:String(g.vacantUnits), cls:g.vacantUnits>0?"neg":""},
+      {k:"Value of let property", v:money(g.rentedValue)}
     ])+
     '<div class="grid two">'+
       panelHTML("Net worth by asset holder", chartHTML("ov_holder"), "Direct holdings only, so the four figures sum to net worth.")+
@@ -591,6 +635,11 @@ function overviewHTML(s){
     '<div class="grid two">'+
       panelHTML("Current value by asset", chartHTML("ov_assets", true), "Coloured by the entity that holds the asset.")+
       panelHTML("Property value by location", chartHTML("ov_location", true))+
+    "</div>"+
+    '<div class="grid two">'+
+      panelHTML("Letting status by value", chartHTML("ov_tenancy"),
+        "Rented income producing property against vacant lettable property. Units not yet handed over cannot be let and are shown separately.")+
+      panelHTML("Let and vacant units by development", chartHTML("ov_letting"))+
     "</div>"+
     panelHTML("Property by development", buildingTableHTML(g.records,{showHolder:true}),
       "Every development across all holders, with the apartments in each consolidated onto one line.");
@@ -615,7 +664,10 @@ function holderHTML(h,s){
     {k:"Paid on property", v:money(t.paid)},
     {k:"Outstanding balance", v:money(t.outstanding)},
     {k:"Unrealised gain and loss", v:money(t.unrealised), cls:t.unrealised>0?"pos":(t.unrealised<0?"neg":"")},
-    {k:"Handed over", v:t.handedOver+" of "+t.propertyCount}
+    {k:"Handed over", v:t.handedOver+" of "+t.propertyCount},
+    {k:"Let", v:t.rentedUnits+" of "+t.handedOver+" handed over"},
+    {k:"Vacant and lettable", v:String(t.vacantUnits), cls:t.vacantUnits>0?"neg":""},
+    {k:"Value of let property", v:money(t.rentedValue)}
   ]);
 
   let html=kpiHTML(kpis);
@@ -632,6 +684,11 @@ function holderHTML(h,s){
     '<div class="grid two">'+
       panelHTML("Property value by purpose", chartHTML(p+"_purpose"))+
       panelHTML("Property value by location", chartHTML(p+"_location"))+
+    "</div>"+
+    '<div class="grid two">'+
+      panelHTML("Letting status by value", chartHTML(p+"_tenancy"),
+        "Units not yet handed over cannot be let and are shown separately.")+
+      panelHTML("Let and vacant units by development", chartHTML(p+"_letting"))+
     "</div>";
   }
   const bt=buildingTableHTML(t.records,{showHolder:hasChildren});
@@ -678,6 +735,8 @@ function drawHolderCharts(h,s){
     const byLoc=groupBy(t.props,r=>r.location,r=>r.currentValue);
     sizeChart(p+"_location", byLoc.length);
     hbar(p+"_location", byLoc.map(e=>e[0]), byLoc.map(e=>e[1]), h.colour, true);
+
+    drawTenancy(p+"_tenancy", p+"_letting", t);
   }
 }
 
@@ -693,6 +752,7 @@ function drawOverviewCharts(s){
   const byLoc=groupBy(g.props,r=>r.location,r=>r.currentValue);
   sizeChart("ov_location", byLoc.length);
   hbar("ov_location", byLoc.map(e=>e[0]), byLoc.map(e=>e[1]), INK2, true);
+  drawTenancy("ov_tenancy", "ov_letting", g);
 }
 
 /* ---- register tab ---- */
